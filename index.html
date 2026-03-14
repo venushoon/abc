@@ -3,78 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>알파벳 대소문자 매칭 게임</title>
+    <title>알파벳 매칭 마스터</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         :root {
-            --bg-color: #f0f8ff;
-            --primary: #4a90e2;
-            --correct: #2ecc71;
-            --wrong: #e74c3c;
-            --text-dark: #333;
+            --primary: #4DA8DA;
+            --secondary: #FF9A76;
+            --success: #67E667;
+            --danger: #FF6B6B;
+            --bg: #F5F7FA;
+            --text: #333;
+            --q-bg: #FFF9C4; /* 문제 박스 색상 (연노랑) */
+            --q-border: #FBC02D;
         }
+
+        /* ---------------------------------
+           1. 화면 최적화 (잘림 방지)
+        --------------------------------- */
+        * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0;
+            width: 100vw; height: 100vh; /* 화면에 딱 맞게 고정 */
+            overflow: hidden; /* 스크롤 절대 방지 */
             font-family: 'Jua', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-dark);
-            overflow: hidden; /* 스크롤 방지 */
-            user-select: none; /* 텍스트 선택 방지 */
-            -webkit-user-select: none;
+            background-color: var(--bg);
+            color: var(--text);
+            /* 귀여운 도트 배경 */
+            background-image: radial-gradient(#ddd 2px, transparent 2px);
+            background-size: 30px 30px;
+            user-select: none; -webkit-user-select: none;
+            touch-action: manipulation;
         }
-        #root { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        #root { width: 100%; height: 100%; }
         
-        /* 공통 UI 요소 */
-        .btn {
-            font-family: 'Jua', sans-serif;
-            border: none; border-radius: 2vh;
-            cursor: pointer; font-size: 3vmin;
-            touch-action: manipulation; /* 전자칠판 터치 최적화 */
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .btn-3d {
-            background-color: white;
-            box-shadow: 0 1vh 0 #ccc;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .btn-3d:active {
-            transform: translateY(1vh);
-            box-shadow: 0 0 0 #ccc;
-        }
-        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 1vh 0 #357abd; padding: 2vh 4vw; font-size: 4vmin; }
-        .btn-primary:active { transform: translateY(1vh); box-shadow: 0 0 0 #357abd; }
+        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* 화면 레이아웃 */
-        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        /* ---------------------------------
+           2. 레이아웃 분할 (1~4인용)
+        --------------------------------- */
         .grid-container {
-            display: grid; width: 100%; height: 100%; gap: 1vw; padding: 1vw; box-sizing: border-box;
+            display: grid; width: 100%; height: 100%; padding: 1vh; gap: 1vh;
         }
         .grid-1 { grid-template-columns: 1fr; }
         .grid-2 { grid-template-columns: 1fr 1fr; }
+        /* 3인용일 경우 P3를 아래쪽 전체를 차지하게 하거나 빈칸으로 둠 */
+        .grid-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .grid-3 > div:nth-child(3) { grid-column: 1 / span 2; } /* 3번 플레이어 영역 확장 */
         .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
-        /* 플레이어 영역 */
+        /* 플레이어 개별 영역 */
         .player-zone {
-            background: white; border-radius: 3vh; padding: 2vh;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            box-shadow: 0 0.5vh 1.5vh rgba(0,0,0,0.1);
+            background: white; border-radius: 3vh; padding: 1.5vh;
+            display: flex; flex-direction: column; 
+            border: 4px solid #FFE2E2; box-shadow: 0 0.5vh 1.5vh rgba(0,0,0,0.05);
+            min-height: 0; /* Flex Item 내부 오버플로우 방지 핵심 코드 */
         }
-        .header-info { width: 100%; display: flex; justify-content: space-between; font-size: 3.5vmin; color: var(--primary); }
-        .target-letter { font-size: 18vmin; font-weight: bold; margin: 2vh 0; }
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh; width: 100%; height: 40%; }
-        .option-btn { font-size: 10vmin; border-radius: 3vh; }
         
-        /* 색상 상태 */
-        .correct { background-color: var(--correct) !important; color: white !important; box-shadow: 0 1vh 0 #27ae60 !important; }
-        .wrong { background-color: var(--wrong) !important; color: white !important; box-shadow: 0 1vh 0 #c0392b !important; }
+        .header-info { 
+            display: flex; justify-content: space-between; 
+            font-size: 3.5vmin; color: var(--primary); 
+            margin-bottom: 1vh; font-weight: bold;
+        }
+
+        /* ---------------------------------
+           3. 귀여운 문제 & 보기 UI
+        --------------------------------- */
+        .question-box {
+            flex: 0 0 35%; /* 영역의 35% 차지 */
+            background-color: var(--q-bg);
+            border: 4px solid var(--q-border);
+            border-radius: 2vh; margin-bottom: 1.5vh;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15vmin; color: #5D4037;
+            box-shadow: 0 0.8vh 0 var(--q-border);
+        }
+
+        .options-grid { 
+            flex: 1; /* 남은 공간 모두 차지 */
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.5vh; 
+            min-height: 0;
+        }
+
+        .option-btn {
+            font-family: 'Jua', sans-serif;
+            font-size: 8vmin;
+            background: white; border: 4px solid #E1F0FA; border-radius: 2vh;
+            cursor: pointer; color: #444; 
+            box-shadow: 0 0.8vh 0 #E1F0FA; 
+            transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .option-btn:active { transform: translateY(0.8vh); box-shadow: 0 0 0 #E1F0FA; }
+
+        /* 정답/오답 효과 */
+        .correct { background-color: var(--success) !important; color: white !important; border-color: #4CB94C !important; box-shadow: 0 0.8vh 0 #4CB94C !important; }
+        .wrong { background-color: var(--danger) !important; color: white !important; border-color: #D9534F !important; box-shadow: 0 0.8vh 0 #D9534F !important; }
+
+        /* ---------------------------------
+           4. 설정 및 결과 창
+        --------------------------------- */
+        .settings-box { 
+            background: white; padding: 4vh 4vw; border-radius: 4vh; 
+            border: 5px solid #FFE2E2; box-shadow: 0 1.5vh 0 #FFE2E2; 
+            text-align: center; max-width: 90%; 
+        }
+        .settings-box h1 { color: var(--primary); font-size: 7vmin; margin: 0 0 3vh 0; text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1); }
+        .opt-group { margin-bottom: 2vh; background: #FFF5F5; padding: 2vh; border-radius: 2vh; }
+        .opt-group p { font-size: 4vmin; margin: 0 0 1vh 0; color: var(--secondary); }
+        .setting-btn { padding: 1.5vh 2vw; margin: 0.5vh; border: none; border-radius: 1.5vh; cursor: pointer; background: white; font-size: 3vmin; font-family: 'Jua'; color: #555; box-shadow: 0 0.5vh 0 #ddd; }
+        .setting-btn.selected { background: var(--secondary); color: white; box-shadow: 0 0.5vh 0 #E27A58; }
+        .start-btn { padding: 2vh 4vw; font-size: 5vmin; font-family: 'Jua'; background: var(--success); color: white; border: none; border-radius: 3vh; cursor: pointer; margin-top: 2vh; box-shadow: 0 0.8vh 0 #4CB94C; }
+        .start-btn:active { transform: translateY(0.8vh); box-shadow: 0 0 0 #4CB94C; }
         
-        /* 결과 화면 */
-        .result-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; padding: 2vh; overflow-y: auto; height: 80%; }
-        .result-card { background: white; padding: 2vh 3vw; border-radius: 2vh; width: 40vw; box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.1); }
-        .wrong-note { margin-top: 1.5vh; font-size: 2.5vmin; background: #fff5f5; padding: 1.5vh; border-radius: 1vh; text-align: left; }
+        .result-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; padding: 2vh; overflow-y: auto; height: 70vh; width: 100%;}
+        .result-card { background: white; padding: 2vh 3vw; border-radius: 2vh; width: 45%; border: 4px solid #FFE2E2; box-shadow: 0 1vh 0 #FFE2E2; margin-bottom: 2vh; }
+        .wrong-note { margin-top: 1.5vh; font-size: 3vmin; background: #FFF9C4; padding: 1.5vh; border-radius: 1vh; text-align: left; border: 2px dashed #FBC02D; }
     </style>
 </head>
 <body>
@@ -83,75 +129,61 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // 알파벳 데이터 (A-Z)
         const alphabets = Array.from({length: 26}, (_, i) => ({
             upper: String.fromCharCode(65 + i),
             lower: String.fromCharCode(97 + i)
         }));
 
-        // 효과음 생성기
         const playSound = (type) => {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                const ctx = new AudioContext();
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
+                osc.connect(gain); gain.connect(ctx.destination);
                 if (type === 'correct') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(880, ctx.currentTime); // 높은 음
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
                     gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.1);
+                    osc.start(); osc.stop(ctx.currentTime + 0.1);
                 } else {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(220, ctx.currentTime); // 낮은 음
+                    osc.type = 'square'; osc.frequency.setValueAtTime(220, ctx.currentTime);
                     gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.15);
+                    osc.start(); osc.stop(ctx.currentTime + 0.15);
                 }
-            } catch(e) { console.log("Audio not supported"); }
+            } catch(e) {}
         };
 
-        // 개별 플레이어 영역 컴포넌트
         const PlayerZone = ({ playerNum, level, duration, onGameOver }) => {
             const [score, setScore] = useState(0);
             const [timeLeft, setTimeLeft] = useState(duration);
             const [wrongAnswers, setWrongAnswers] = useState([]);
             const [question, setQuestion] = useState(null);
-            const [status, setStatus] = useState('playing'); // playing, correct, wrong
+            const [status, setStatus] = useState('playing');
             const [selectedId, setSelectedId] = useState(null);
             
-            // 문제 출제 로직
             const generateQuestion = () => {
-                const maxIndex = Math.min(26, level * 5 + 1); // 난이도별 범위
+                const maxIndex = Math.min(26, level * 5 + 1);
                 const targetPair = alphabets[Math.floor(Math.random() * maxIndex)];
-                const isUpperToLower = Math.random() > 0.5; // 50:50 비율
+                const isUpperToLower = Math.random() > 0.5;
                 
                 const qText = isUpperToLower ? targetPair.upper : targetPair.lower;
                 const aText = isUpperToLower ? targetPair.lower : targetPair.upper;
                 
-                // 오답 보기 3개 생성
                 let options = [aText];
                 while(options.length < 4) {
                     const randomPair = alphabets[Math.floor(Math.random() * maxIndex)];
                     const wrongText = isUpperToLower ? randomPair.lower : randomPair.upper;
                     if (!options.includes(wrongText)) options.push(wrongText);
                 }
-                options.sort(() => Math.random() - 0.5); // 섞기
+                options.sort(() => Math.random() - 0.5);
                 
                 setQuestion({ target: qText, answer: aText, options });
-                setStatus('playing');
-                setSelectedId(null);
+                setStatus('playing'); setSelectedId(null);
             };
 
             useEffect(() => { generateQuestion(); }, []);
 
-            // 타이머 로직
             useEffect(() => {
+                if (duration === 0) return; // 무제한 모드
                 if (timeLeft <= 0) {
                     onGameOver(playerNum, score, wrongAnswers);
                     return;
@@ -161,19 +193,15 @@
             }, [timeLeft]);
 
             const handleSelect = (option) => {
-                if (status !== 'playing') return; // 중복 터치 방지
-                
+                if (status !== 'playing') return;
                 setSelectedId(option);
                 if (option === question.answer) {
-                    playSound('correct');
-                    setStatus('correct');
-                    setScore(prev => prev + 10);
+                    playSound('correct'); setStatus('correct'); setScore(prev => prev + 10);
                 } else {
-                    playSound('wrong');
-                    setStatus('wrong');
+                    playSound('wrong'); setStatus('wrong');
                     setWrongAnswers(prev => [...prev, { q: question.target, wrong: option, right: question.answer }]);
                 }
-                setTimeout(generateQuestion, 800); // 0.8초 후 다음 문제
+                setTimeout(generateQuestion, 800);
             };
 
             if (!question) return <div>로딩중...</div>;
@@ -181,13 +209,15 @@
             return (
                 <div className="player-zone">
                     <div className="header-info">
-                        <span>P{playerNum} 점수: {score}</span>
-                        <span>⏳ {timeLeft}초</span>
+                        <span style={{color: ['#4DA8DA', '#FF6B6B', '#67E667', '#FF9A76'][playerNum-1]}}>
+                            P{playerNum} 점수: {score}
+                        </span>
+                        <span>{duration === 0 ? "무제한" : `⏳ ${timeLeft}초`}</span>
                     </div>
-                    <div className="target-letter">{question.target}</div>
+                    <div className="question-box">{question.target}</div>
                     <div className="options-grid">
                         {question.options.map((opt, idx) => {
-                            let btnClass = "btn btn-3d option-btn";
+                            let btnClass = "option-btn";
                             if (status !== 'playing') {
                                 if (opt === question.answer) btnClass += " correct";
                                 else if (opt === selectedId) btnClass += " wrong";
@@ -203,67 +233,60 @@
             );
         };
 
-        // 메인 앱 컴포넌트
         const App = () => {
-            const [gameState, setGameState] = useState('settings'); // settings, countdown, playing, result
-            const [playersCount, setPlayersCount] = useState(2);
+            const [gameState, setGameState] = useState('settings');
+            const [playersCount, setPlayersCount] = useState(3); // 첨부 사진 기준 3명 기본값
             const [difficulty, setDifficulty] = useState(3);
             const [timeLimit, setTimeLimit] = useState(60);
             const [countdown, setCountdown] = useState(3);
             const [results, setResults] = useState([]);
-
-            const startGame = () => { setGameState('countdown'); setCountdown(3); };
 
             useEffect(() => {
                 if (gameState === 'countdown') {
                     if (countdown > 0) {
                         const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
                         return () => clearTimeout(timer);
-                    } else {
-                        setGameState('playing');
-                        setResults([]);
-                    }
+                    } else { setGameState('playing'); setResults([]); }
                 }
             }, [gameState, countdown]);
 
             const handleGameOver = (playerNum, score, wrongAnswers) => {
                 setResults(prev => {
                     const newResults = [...prev, { playerNum, score, wrongAnswers }];
-                    if (newResults.length === playersCount) {
-                        setTimeout(() => setGameState('result'), 500); // 모두 종료 시 결과창
-                    }
+                    if (newResults.length === playersCount) setTimeout(() => setGameState('result'), 500);
                     return newResults;
                 });
             };
 
             const renderSettings = () => (
                 <div className="screen">
-                    <h1 style={{fontSize: '8vmin', color: 'var(--primary)', marginBottom: '5vh'}}>알파벳 매칭 게임 🎮</h1>
-                    <div style={{display: 'flex', gap: '3vw', marginBottom: '4vh', fontSize: '4vmin'}}>
-                        <label>인원: <select value={playersCount} onChange={e => setPlayersCount(Number(e.target.value))} style={{fontSize:'3vmin', padding:'1vh'}}>
-                            {[1,2,3,4].map(n => <option key={n} value={n}>{n}인</option>)}
-                        </select></label>
-                        <label>난이도: <select value={difficulty} onChange={e => setDifficulty(Number(e.target.value))} style={{fontSize:'3vmin', padding:'1vh'}}>
-                            {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}단계</option>)}
-                        </select></label>
-                        <label>시간: <select value={timeLimit} onChange={e => setTimeLimit(Number(e.target.value))} style={{fontSize:'3vmin', padding:'1vh'}}>
-                            <option value={30}>30초</option><option value={60}>60초</option><option value={120}>120초</option>
-                        </select></label>
+                    <div className="settings-box">
+                        <h1>대소문자 매칭 게임 🔠</h1>
+                        <div className="opt-group">
+                            <p>👥 인원수</p>
+                            {[1,2,3,4].map(n => (
+                                <button key={n} className={`setting-btn ${playersCount === n ? 'selected' : ''}`} onClick={() => setPlayersCount(n)}>{n}인</button>
+                            ))}
+                        </div>
+                        <div className="opt-group">
+                            <p>⏳ 제한 시간</p>
+                            {[30, 60, 120, 0].map(t => (
+                                <button key={t} className={`setting-btn ${timeLimit === t ? 'selected' : ''}`} onClick={() => setTimeLimit(t)}>{t === 0 ? '무제한' : `${t}초`}</button>
+                            ))}
+                        </div>
+                        <button className="start-btn" onClick={() => { setGameState('countdown'); setCountdown(3); }}>🚀 게임 시작!</button>
                     </div>
-                    <button className="btn btn-primary" onClick={startGame}>게임 시작!</button>
                 </div>
             );
 
             const renderCountdown = () => (
                 <div className="screen">
-                    <h1 style={{fontSize: '30vmin', color: 'var(--primary)', margin: 0}}>
-                        {countdown > 0 ? countdown : "GO!"}
-                    </h1>
+                    <h1 style={{fontSize: '30vmin', color: 'var(--danger)', textShadow: '4px 4px 0 #ddd'}}>{countdown}</h1>
                 </div>
             );
 
             const renderPlaying = () => {
-                const gridClass = playersCount === 1 ? 'grid-1' : (playersCount === 2 ? 'grid-2' : 'grid-4');
+                const gridClass = `grid-${playersCount}`;
                 return (
                     <div className={`grid-container ${gridClass}`}>
                         {Array.from({length: playersCount}).map((_, i) => (
@@ -276,27 +299,27 @@
             const renderResults = () => {
                 const sortedResults = [...results].sort((a, b) => b.score - a.score);
                 return (
-                    <div className="screen" style={{justifyContent: 'flex-start', paddingTop: '5vh'}}>
-                        <h1 style={{fontSize: '6vmin', color: 'var(--primary)'}}>최종 결과 🎉</h1>
+                    <div className="screen" style={{paddingTop: '3vh'}}>
+                        <h1 style={{fontSize: '8vmin', color: 'var(--primary)', margin: '0 0 2vh 0'}}>최종 결과 🎉</h1>
                         <div className="result-cards">
                             {sortedResults.map((res, idx) => (
                                 <div key={res.playerNum} className="result-card">
-                                    <h2>{idx + 1}등 - Player {res.playerNum} ({res.score}점)</h2>
+                                    <h2 style={{margin:0, fontSize: '4vmin', color: 'var(--secondary)'}}>
+                                        {idx + 1}등 - P{res.playerNum} ({res.score}점)
+                                    </h2>
                                     <div className="wrong-note">
-                                        <strong>나의 오답 노트 📝</strong><br/>
+                                        <strong>📝 나의 오답 노트</strong><br/>
                                         {res.wrongAnswers.length === 0 ? 
-                                            <span style={{color: 'var(--correct)'}}>전부 맞혔어요! 완벽해요! ✨</span> : 
-                                            <ul style={{paddingLeft: '3vw', margin: '1vh 0'}}>
-                                                {res.wrongAnswers.map((w, i) => (
-                                                    <li key={i}>{w.q} ➔ {w.wrong} (X) / {w.right} (O)</li>
-                                                ))}
+                                            <span style={{color: '#2e7d32'}}>전부 맞혔어요! 완벽해요! ✨</span> : 
+                                            <ul style={{paddingLeft: '3vw', margin: '1vh 0', fontSize: '2.5vmin'}}>
+                                                {res.wrongAnswers.map((w, i) => <li key={i}>{w.q} : {w.wrong} (X) ➔ {w.right} (O)</li>)}
                                             </ul>
                                         }
                                     </div>
                                 </div>
                             ))}
                         </div>
-                        <button className="btn btn-primary" onClick={() => setGameState('settings')} style={{marginTop: '2vh'}}>다시 하기</button>
+                        <button className="start-btn" onClick={() => setGameState('settings')} style={{position:'absolute', bottom: '2vh'}}>다시 하기</button>
                     </div>
                 );
             };
