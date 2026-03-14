@@ -16,22 +16,18 @@
             --danger: #FF6B6B;
             --bg: #F5F7FA;
             --text: #333;
-            --q-bg: #FFF9C4; /* 문제 박스 색상 (연노랑) */
+            --q-bg: #FFF9C4;
             --q-border: #FBC02D;
         }
 
-        /* ---------------------------------
-           1. 화면 최적화 (잘림 방지)
-        --------------------------------- */
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0;
-            width: 100vw; height: 100vh; /* 화면에 딱 맞게 고정 */
-            overflow: hidden; /* 스크롤 절대 방지 */
-            font-family: 'Jua', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden; /* 스크롤 완벽 차단 */
+            font-family: 'Jua', sans-serif; /* 기본 UI 폰트 */
             background-color: var(--bg);
             color: var(--text);
-            /* 귀여운 도트 배경 */
             background-image: radial-gradient(#ddd 2px, transparent 2px);
             background-size: 30px 30px;
             user-select: none; -webkit-user-select: none;
@@ -42,68 +38,68 @@
         .screen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
         /* ---------------------------------
-           2. 레이아웃 분할 (1~4인용)
+           1. 레이아웃: N단 세로 분할 (가로로 나란히)
         --------------------------------- */
-        .grid-container {
-            display: grid; width: 100%; height: 100%; padding: 1vh; gap: 1vh;
+        .flex-container {
+            display: flex; flex-direction: row; /* 무조건 가로로 배치 */
+            width: 100%; height: 100%; 
+            padding: 1.5vh 1vw; gap: 1vw;
         }
-        .grid-1 { grid-template-columns: 1fr; }
-        .grid-2 { grid-template-columns: 1fr 1fr; }
-        /* 3인용일 경우 P3를 아래쪽 전체를 차지하게 하거나 빈칸으로 둠 */
-        .grid-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        .grid-3 > div:nth-child(3) { grid-column: 1 / span 2; } /* 3번 플레이어 영역 확장 */
-        .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
         /* 플레이어 개별 영역 */
         .player-zone {
+            flex: 1; /* 가로 공간을 동일하게 나눠 가짐 */
+            min-width: 0; min-height: 0; /* 넘침 방지 핵심 */
             background: white; border-radius: 3vh; padding: 1.5vh;
             display: flex; flex-direction: column; 
             border: 4px solid #FFE2E2; box-shadow: 0 0.5vh 1.5vh rgba(0,0,0,0.05);
-            min-height: 0; /* Flex Item 내부 오버플로우 방지 핵심 코드 */
         }
         
         .header-info { 
             display: flex; justify-content: space-between; 
-            font-size: 3.5vmin; color: var(--primary); 
+            font-size: 2.5vw; color: var(--primary); 
             margin-bottom: 1vh; font-weight: bold;
         }
 
         /* ---------------------------------
-           3. 귀여운 문제 & 보기 UI
+           2. 알파벳 시인성 전용 폰트 설정
         --------------------------------- */
+        .alphabet-text {
+            font-family: 'Verdana', 'Arial', sans-serif !important; /* 가독성 최강 고딕체 */
+            font-weight: 900;
+        }
+
         .question-box {
-            flex: 0 0 35%; /* 영역의 35% 차지 */
+            flex: 0 0 35%; /* 상단 35% 차지 */
             background-color: var(--q-bg);
             border: 4px solid var(--q-border);
             border-radius: 2vh; margin-bottom: 1.5vh;
             display: flex; align-items: center; justify-content: center;
-            font-size: 15vmin; color: #5D4037;
+            font-size: 15vmin; color: #333;
             box-shadow: 0 0.8vh 0 var(--q-border);
         }
 
         .options-grid { 
-            flex: 1; /* 남은 공간 모두 차지 */
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.5vh; 
+            flex: 1; /* 남은 하단 공간 차지 */
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1vw; 
             min-height: 0;
         }
 
         .option-btn {
-            font-family: 'Jua', sans-serif;
-            font-size: 8vmin;
             background: white; border: 4px solid #E1F0FA; border-radius: 2vh;
-            cursor: pointer; color: #444; 
+            cursor: pointer; color: #333; 
             box-shadow: 0 0.8vh 0 #E1F0FA; 
             transition: all 0.1s;
             display: flex; align-items: center; justify-content: center;
+            font-size: 10vmin; 
         }
         .option-btn:active { transform: translateY(0.8vh); box-shadow: 0 0 0 #E1F0FA; }
 
-        /* 정답/오답 효과 */
         .correct { background-color: var(--success) !important; color: white !important; border-color: #4CB94C !important; box-shadow: 0 0.8vh 0 #4CB94C !important; }
         .wrong { background-color: var(--danger) !important; color: white !important; border-color: #D9534F !important; box-shadow: 0 0.8vh 0 #D9534F !important; }
 
         /* ---------------------------------
-           4. 설정 및 결과 창
+           3. 설정 및 결과 창 (Jua 폰트 유지)
         --------------------------------- */
         .settings-box { 
             background: white; padding: 4vh 4vw; border-radius: 4vh; 
@@ -121,6 +117,11 @@
         .result-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; padding: 2vh; overflow-y: auto; height: 70vh; width: 100%;}
         .result-card { background: white; padding: 2vh 3vw; border-radius: 2vh; width: 45%; border: 4px solid #FFE2E2; box-shadow: 0 1vh 0 #FFE2E2; margin-bottom: 2vh; }
         .wrong-note { margin-top: 1.5vh; font-size: 3vmin; background: #FFF9C4; padding: 1.5vh; border-radius: 1vh; text-align: left; border: 2px dashed #FBC02D; }
+        
+        /* 모바일이나 너무 좁은 화면 대비 */
+        @media (max-width: 600px) {
+            .header-info { font-size: 4vw; }
+        }
     </style>
 </head>
 <body>
@@ -183,7 +184,7 @@
             useEffect(() => { generateQuestion(); }, []);
 
             useEffect(() => {
-                if (duration === 0) return; // 무제한 모드
+                if (duration === 0) return; 
                 if (timeLeft <= 0) {
                     onGameOver(playerNum, score, wrongAnswers);
                     return;
@@ -214,10 +215,11 @@
                         </span>
                         <span>{duration === 0 ? "무제한" : `⏳ ${timeLeft}초`}</span>
                     </div>
-                    <div className="question-box">{question.target}</div>
+                    {/* 알파벳 텍스트에만 alphabet-text 클래스 적용 */}
+                    <div className="question-box alphabet-text">{question.target}</div>
                     <div className="options-grid">
                         {question.options.map((opt, idx) => {
-                            let btnClass = "option-btn";
+                            let btnClass = "option-btn alphabet-text";
                             if (status !== 'playing') {
                                 if (opt === question.answer) btnClass += " correct";
                                 else if (opt === selectedId) btnClass += " wrong";
@@ -235,7 +237,7 @@
 
         const App = () => {
             const [gameState, setGameState] = useState('settings');
-            const [playersCount, setPlayersCount] = useState(3); // 첨부 사진 기준 3명 기본값
+            const [playersCount, setPlayersCount] = useState(3);
             const [difficulty, setDifficulty] = useState(3);
             const [timeLimit, setTimeLimit] = useState(60);
             const [countdown, setCountdown] = useState(3);
@@ -263,9 +265,9 @@
                     <div className="settings-box">
                         <h1>대소문자 매칭 게임 🔠</h1>
                         <div className="opt-group">
-                            <p>👥 인원수</p>
+                            <p>👥 인원수 (단 나누기)</p>
                             {[1,2,3,4].map(n => (
-                                <button key={n} className={`setting-btn ${playersCount === n ? 'selected' : ''}`} onClick={() => setPlayersCount(n)}>{n}인</button>
+                                <button key={n} className={`setting-btn ${playersCount === n ? 'selected' : ''}`} onClick={() => setPlayersCount(n)}>{n}단 (명)</button>
                             ))}
                         </div>
                         <div className="opt-group">
@@ -286,9 +288,9 @@
             );
 
             const renderPlaying = () => {
-                const gridClass = `grid-${playersCount}`;
+                // CSS Grid 대신 Flexbox를 사용하여 무조건 가로로 배치
                 return (
-                    <div className={`grid-container ${gridClass}`}>
+                    <div className="flex-container">
                         {Array.from({length: playersCount}).map((_, i) => (
                             <PlayerZone key={i} playerNum={i+1} level={difficulty} duration={timeLimit} onGameOver={handleGameOver} />
                         ))}
@@ -312,7 +314,7 @@
                                         {res.wrongAnswers.length === 0 ? 
                                             <span style={{color: '#2e7d32'}}>전부 맞혔어요! 완벽해요! ✨</span> : 
                                             <ul style={{paddingLeft: '3vw', margin: '1vh 0', fontSize: '2.5vmin'}}>
-                                                {res.wrongAnswers.map((w, i) => <li key={i}>{w.q} : {w.wrong} (X) ➔ {w.right} (O)</li>)}
+                                                {res.wrongAnswers.map((w, i) => <li key={i}><span className="alphabet-text">{w.q} : {w.wrong} (X) ➔ {w.right} (O)</span></li>)}
                                             </ul>
                                         }
                                     </div>
