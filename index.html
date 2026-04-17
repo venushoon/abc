@@ -3,108 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>알파벳 매칭 마스터</title>
+    <title>알파벳 매칭 마스터 - Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         :root {
-            --primary: #4DA8DA;
-            --secondary: #FF9A76;
-            --success: #67E667;
-            --danger: #FF6B6B;
-            --bg: #F5F7FA;
-            --text: #333;
-            --q-bg: #FFF9C4;
-            --q-border: #FBC02D;
+            --primary: #4DA8DA; --secondary: #FF9A76;
+            --success: #67E667; --danger: #FF6B6B;
+            --bg: #F5F7FA; --text: #333;
+            --q-bg: #FFF9C4; --q-border: #FBC02D;
         }
 
         * { box-sizing: border-box; }
         body {
-            margin: 0; padding: 0;
-            width: 100vw; height: 100vh;
-            overflow: hidden; /* 스크롤 완벽 차단 */
-            font-family: 'Jua', sans-serif; /* 기본 UI 폰트 */
-            background-color: var(--bg);
-            color: var(--text);
-            background-image: radial-gradient(#ddd 2px, transparent 2px);
-            background-size: 30px 30px;
-            user-select: none; -webkit-user-select: none;
-            touch-action: manipulation;
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
+            font-family: 'Jua', sans-serif; background-color: var(--bg); color: var(--text);
+            background-image: radial-gradient(#ddd 2px, transparent 2px); background-size: 30px 30px;
+            user-select: none; -webkit-user-select: none; touch-action: manipulation;
         }
         #root { width: 100%; height: 100%; }
         
-        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .result-screen { justify-content: flex-start; padding: 4vh 2vw; overflow-y: auto; height: 100vh; }
 
-        /* ---------------------------------
-           1. 레이아웃: N단 세로 분할 (가로로 나란히)
-        --------------------------------- */
         .flex-container {
-            display: flex; flex-direction: row; /* 무조건 가로로 배치 */
-            width: 100%; height: 100%; 
-            padding: 1.5vh 1vw; gap: 1vw;
+            display: flex; flex-direction: row; width: 100%; height: 100%; 
+            padding: 1.5vh 1vw; gap: 1vw; position: relative;
         }
 
-        /* 플레이어 개별 영역 */
         .player-zone {
-            flex: 1; /* 가로 공간을 동일하게 나눠 가짐 */
-            min-width: 0; min-height: 0; /* 넘침 방지 핵심 */
+            flex: 1; min-width: 0; min-height: 0; 
             background: white; border-radius: 3vh; padding: 1.5vh;
             display: flex; flex-direction: column; 
             border: 4px solid #FFE2E2; box-shadow: 0 0.5vh 1.5vh rgba(0,0,0,0.05);
         }
         
         .header-info { 
-            display: flex; justify-content: space-between; 
-            font-size: 2.5vw; color: var(--primary); 
-            margin-bottom: 1vh; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            width: 100%; background-color: #F8F9FA; border-radius: 2vh;
+            padding: 1vh 0; margin-bottom: 1.5vh; border: 2px solid #EBEBEB; gap: 0.5vh;
         }
+        .score-text { font-size: 4vmin; font-weight: bold; white-space: nowrap; letter-spacing: 1px; }
+        .time-text { font-size: 3.5vmin; color: #7F8C8D; white-space: nowrap; }
 
-        /* ---------------------------------
-           2. 알파벳 시인성 전용 폰트 설정
-        --------------------------------- */
-        .alphabet-text {
-            font-family: 'Verdana', 'Arial', sans-serif !important; /* 가독성 최강 고딕체 */
-            font-weight: 900;
-        }
+        .alphabet-text { font-family: 'Verdana', 'Arial', sans-serif !important; font-weight: 900; }
 
         .question-box {
-            flex: 0 0 35%; /* 상단 35% 차지 */
-            background-color: var(--q-bg);
-            border: 4px solid var(--q-border);
-            border-radius: 2vh; margin-bottom: 1.5vh;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 15vmin; color: #333;
-            box-shadow: 0 0.8vh 0 var(--q-border);
+            flex: 0 0 35%; background-color: var(--q-bg); border: 4px solid var(--q-border);
+            border-radius: 2vh; margin-bottom: 1.5vh; display: flex; align-items: center; justify-content: center;
+            color: #333; box-shadow: 0 0.8vh 0 var(--q-border); transition: font-size 0.3s;
         }
 
         .options-grid { 
-            flex: 1; /* 남은 하단 공간 차지 */
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1vw; 
-            min-height: 0;
+            flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1vw; min-height: 0;
         }
 
         .option-btn {
             background: white; border: 4px solid #E1F0FA; border-radius: 2vh;
-            cursor: pointer; color: #333; 
-            box-shadow: 0 0.8vh 0 #E1F0FA; 
-            transition: all 0.1s;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10vmin; 
+            cursor: pointer; color: #333; box-shadow: 0 0.8vh 0 #E1F0FA; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center; 
         }
         .option-btn:active { transform: translateY(0.8vh); box-shadow: 0 0 0 #E1F0FA; }
 
         .correct { background-color: var(--success) !important; color: white !important; border-color: #4CB94C !important; box-shadow: 0 0.8vh 0 #4CB94C !important; }
         .wrong { background-color: var(--danger) !important; color: white !important; border-color: #D9534F !important; box-shadow: 0 0.8vh 0 #D9534F !important; }
 
-        /* ---------------------------------
-           3. 설정 및 결과 창 (Jua 폰트 유지)
-        --------------------------------- */
         .settings-box { 
-            background: white; padding: 4vh 4vw; border-radius: 4vh; 
-            border: 5px solid #FFE2E2; box-shadow: 0 1.5vh 0 #FFE2E2; 
-            text-align: center; max-width: 90%; 
+            background: white; padding: 4vh 4vw; border-radius: 4vh; border: 5px solid #FFE2E2; 
+            box-shadow: 0 1.5vh 0 #FFE2E2; text-align: center; max-width: 90%; 
         }
         .settings-box h1 { color: var(--primary); font-size: 7vmin; margin: 0 0 3vh 0; text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1); }
         .opt-group { margin-bottom: 2vh; background: #FFF5F5; padding: 2vh; border-radius: 2vh; }
@@ -113,47 +81,49 @@
         .setting-btn.selected { background: var(--secondary); color: white; box-shadow: 0 0.5vh 0 #E27A58; }
         .start-btn { padding: 2vh 4vw; font-size: 5vmin; font-family: 'Jua'; background: var(--success); color: white; border: none; border-radius: 3vh; cursor: pointer; margin-top: 2vh; box-shadow: 0 0.8vh 0 #4CB94C; }
         .start-btn:active { transform: translateY(0.8vh); box-shadow: 0 0 0 #4CB94C; }
-        
-        .result-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; padding: 2vh; overflow-y: auto; height: 70vh; width: 100%;}
-        .result-card { background: white; padding: 2vh 3vw; border-radius: 2vh; width: 45%; border: 4px solid #FFE2E2; box-shadow: 0 1vh 0 #FFE2E2; margin-bottom: 2vh; }
+
+        .result-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; margin-bottom: 5vh; }
+        .result-card { background: white; padding: 2vh 3vw; border-radius: 2vh; width: 45%; border: 4px solid #FFE2E2; box-shadow: 0 1vh 0 #FFE2E2; margin-bottom: 2vh; height: fit-content; }
         .wrong-note { margin-top: 1.5vh; font-size: 3vmin; background: #FFF9C4; padding: 1.5vh; border-radius: 1vh; text-align: left; border: 2px dashed #FBC02D; }
         
-        /* 모바일이나 너무 좁은 화면 대비 */
-        @media (max-width: 600px) {
-            .header-info { font-size: 4vw; }
-        }
+        @media (max-width: 600px) { .score-text { font-size: 5vw; } .time-text { font-size: 4.5vw; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
         const alphabets = Array.from({length: 26}, (_, i) => ({
-            upper: String.fromCharCode(65 + i),
-            lower: String.fromCharCode(97 + i)
+            upper: String.fromCharCode(65 + i), lower: String.fromCharCode(97 + i)
         }));
 
+        let audioCtx = null;
+        const initAudio = () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        };
+
         const playSound = (type) => {
+            if (!audioCtx) return;
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 if (type === 'correct') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    osc.start(); osc.stop(ctx.currentTime + 0.1);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                 } else {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(220, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    osc.start(); osc.stop(ctx.currentTime + 0.15);
+                    osc.type = 'square'; osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.15);
                 }
             } catch(e) {}
         };
 
-        const PlayerZone = ({ playerNum, level, duration, onGameOver }) => {
+        const PlayerZone = ({ playerNum, totalPlayers, level, duration, onGameOver }) => {
             const [score, setScore] = useState(0);
             const [timeLeft, setTimeLeft] = useState(duration);
             const [wrongAnswers, setWrongAnswers] = useState([]);
@@ -161,8 +131,28 @@
             const [status, setStatus] = useState('playing');
             const [selectedId, setSelectedId] = useState(null);
             
+            const scoreRef = useRef(score); scoreRef.current = score;
+            const wrongAnswersRef = useRef(wrongAnswers); wrongAnswersRef.current = wrongAnswers;
+            
+            const hasEnded = useRef(false);
+            const timeoutRef = useRef(null);
+
+            const qFontSize = totalPlayers <= 2 ? '25vmin' : '15vmin';
+            const optFontSize = totalPlayers <= 2 ? '15vmin' : '10vmin';
+
+            const triggerGameOver = useCallback(() => {
+                if (hasEnded.current) return;
+                hasEnded.current = true;
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                onGameOver(playerNum, scoreRef.current, wrongAnswersRef.current);
+            }, [playerNum, onGameOver]);
+
             const generateQuestion = () => {
-                const maxIndex = Math.min(26, level * 5 + 1);
+                if (hasEnded.current) return;
+                
+                const minPoolSize = 6; 
+                const maxIndex = Math.max(minPoolSize, Math.min(26, level * 5 + 1));
+                
                 const targetPair = alphabets[Math.floor(Math.random() * maxIndex)];
                 const isUpperToLower = Math.random() > 0.5;
                 
@@ -170,10 +160,12 @@
                 const aText = isUpperToLower ? targetPair.lower : targetPair.upper;
                 
                 let options = [aText];
-                while(options.length < 4) {
+                let attempts = 0;
+                while(options.length < 4 && attempts < 50) {
                     const randomPair = alphabets[Math.floor(Math.random() * maxIndex)];
                     const wrongText = isUpperToLower ? randomPair.lower : randomPair.upper;
                     if (!options.includes(wrongText)) options.push(wrongText);
+                    attempts++;
                 }
                 options.sort(() => Math.random() - 0.5);
                 
@@ -181,28 +173,38 @@
                 setStatus('playing'); setSelectedId(null);
             };
 
-            useEffect(() => { generateQuestion(); }, []);
+            useEffect(() => {
+                generateQuestion();
+                return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+            }, []);
 
             useEffect(() => {
                 if (duration === 0) return; 
                 if (timeLeft <= 0) {
-                    onGameOver(playerNum, score, wrongAnswers);
+                    triggerGameOver();
                     return;
                 }
                 const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
                 return () => clearInterval(timer);
-            }, [timeLeft]);
+            }, [timeLeft, duration, triggerGameOver]);
 
             const handleSelect = (option) => {
-                if (status !== 'playing') return;
+                if (status !== 'playing' || hasEnded.current) return;
                 setSelectedId(option);
+                
                 if (option === question.answer) {
                     playSound('correct'); setStatus('correct'); setScore(prev => prev + 10);
                 } else {
                     playSound('wrong'); setStatus('wrong');
-                    setWrongAnswers(prev => [...prev, { q: question.target, wrong: option, right: question.answer }]);
+                    setWrongAnswers(prev => {
+                        const isDup = prev.some(w => w.q === question.target && w.wrong === option);
+                        if (isDup) return prev;
+                        return [...prev, { q: question.target, wrong: option, right: question.answer }];
+                    });
                 }
-                setTimeout(generateQuestion, 800);
+                timeoutRef.current = setTimeout(() => {
+                    if (!hasEnded.current) generateQuestion();
+                }, 800);
             };
 
             if (!question) return <div>로딩중...</div>;
@@ -210,13 +212,14 @@
             return (
                 <div className="player-zone">
                     <div className="header-info">
-                        <span style={{color: ['#4DA8DA', '#FF6B6B', '#67E667', '#FF9A76'][playerNum-1]}}>
+                        <div className="score-text" style={{color: ['#4DA8DA', '#FF6B6B', '#67E667', '#FF9A76'][playerNum-1]}}>
                             P{playerNum} 점수: {score}
-                        </span>
-                        <span>{duration === 0 ? "무제한" : `⏳ ${timeLeft}초`}</span>
+                        </div>
+                        <div className="time-text">
+                            {duration === 0 ? "무제한" : `⏳ ${timeLeft}초`}
+                        </div>
                     </div>
-                    {/* 알파벳 텍스트에만 alphabet-text 클래스 적용 */}
-                    <div className="question-box alphabet-text">{question.target}</div>
+                    <div className="question-box alphabet-text" style={{fontSize: qFontSize}}>{question.target}</div>
                     <div className="options-grid">
                         {question.options.map((opt, idx) => {
                             let btnClass = "option-btn alphabet-text";
@@ -225,7 +228,7 @@
                                 else if (opt === selectedId) btnClass += " wrong";
                             }
                             return (
-                                <button key={idx} className={btnClass} onClick={() => handleSelect(opt)}>
+                                <button key={idx} className={btnClass} style={{fontSize: optFontSize}} onClick={() => handleSelect(opt)}>
                                     {opt}
                                 </button>
                             );
@@ -237,27 +240,46 @@
 
         const App = () => {
             const [gameState, setGameState] = useState('settings');
-            const [playersCount, setPlayersCount] = useState(3);
+            const [playersCount, setPlayersCount] = useState(4);
             const [difficulty, setDifficulty] = useState(3);
             const [timeLimit, setTimeLimit] = useState(60);
             const [countdown, setCountdown] = useState(3);
+            
             const [results, setResults] = useState([]);
+            const [gameId, setGameId] = useState(0); 
+
+            const playersCountRef = useRef(playersCount);
+            useEffect(() => { playersCountRef.current = playersCount; }, [playersCount]);
 
             useEffect(() => {
                 if (gameState === 'countdown') {
-                    if (countdown > 0) {
+                    if (countdown >= 0) {
                         const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
                         return () => clearTimeout(timer);
-                    } else { setGameState('playing'); setResults([]); }
+                    } else { 
+                        setGameState('playing'); 
+                    }
                 }
             }, [gameState, countdown]);
 
-            const handleGameOver = (playerNum, score, wrongAnswers) => {
+            const handleGameOver = useCallback((playerNum, score, wrongAnswers) => {
                 setResults(prev => {
+                    if (prev.some(r => r.playerNum === playerNum)) return prev;
+                    
                     const newResults = [...prev, { playerNum, score, wrongAnswers }];
-                    if (newResults.length === playersCount) setTimeout(() => setGameState('result'), 500);
+                    if (newResults.length === playersCountRef.current) {
+                        setTimeout(() => setGameState('result'), 500);
+                    }
                     return newResults;
                 });
+            }, []);
+
+            const startGame = () => {
+                initAudio(); 
+                setResults([]);
+                setGameId(prev => prev + 1); 
+                setGameState('countdown');
+                setCountdown(3);
             };
 
             const renderSettings = () => (
@@ -267,7 +289,13 @@
                         <div className="opt-group">
                             <p>👥 인원수 (단 나누기)</p>
                             {[1,2,3,4].map(n => (
-                                <button key={n} className={`setting-btn ${playersCount === n ? 'selected' : ''}`} onClick={() => setPlayersCount(n)}>{n}단 (명)</button>
+                                <button key={n} className={`setting-btn ${playersCount === n ? 'selected' : ''}`} onClick={() => setPlayersCount(n)}>{n}명</button>
+                            ))}
+                        </div>
+                        <div className="opt-group">
+                            <p>🌟 난이도 (알파벳 범위)</p>
+                            {[1,2,3,4,5].map(n => (
+                                <button key={n} className={`setting-btn ${difficulty === n ? 'selected' : ''}`} onClick={() => setDifficulty(n)}>{n}단계</button>
                             ))}
                         </div>
                         <div className="opt-group">
@@ -276,24 +304,34 @@
                                 <button key={t} className={`setting-btn ${timeLimit === t ? 'selected' : ''}`} onClick={() => setTimeLimit(t)}>{t === 0 ? '무제한' : `${t}초`}</button>
                             ))}
                         </div>
-                        <button className="start-btn" onClick={() => { setGameState('countdown'); setCountdown(3); }}>🚀 게임 시작!</button>
+                        <button className="start-btn" onClick={startGame}>🚀 게임 시작!</button>
                     </div>
                 </div>
             );
 
             const renderCountdown = () => (
                 <div className="screen">
-                    <h1 style={{fontSize: '30vmin', color: 'var(--danger)', textShadow: '4px 4px 0 #ddd'}}>{countdown}</h1>
+                    <h1 style={{fontSize: '30vmin', color: 'var(--danger)', textShadow: '4px 4px 0 #ddd'}}>
+                        {countdown > 0 ? countdown : "시작!"}
+                    </h1>
                 </div>
             );
 
             const renderPlaying = () => {
-                // CSS Grid 대신 Flexbox를 사용하여 무조건 가로로 배치
                 return (
-                    <div className="flex-container">
-                        {Array.from({length: playersCount}).map((_, i) => (
-                            <PlayerZone key={i} playerNum={i+1} level={difficulty} duration={timeLimit} onGameOver={handleGameOver} />
-                        ))}
+                    <div className="screen">
+                        <div className="flex-container">
+                            {Array.from({length: playersCount}).map((_, i) => (
+                                <PlayerZone 
+                                    key={`${gameId}-${i}`} 
+                                    playerNum={i+1} 
+                                    totalPlayers={playersCount}
+                                    level={difficulty} 
+                                    duration={timeLimit} 
+                                    onGameOver={handleGameOver} 
+                                />
+                            ))}
+                        </div>
                     </div>
                 );
             };
@@ -301,27 +339,29 @@
             const renderResults = () => {
                 const sortedResults = [...results].sort((a, b) => b.score - a.score);
                 return (
-                    <div className="screen" style={{paddingTop: '3vh'}}>
-                        <h1 style={{fontSize: '8vmin', color: 'var(--primary)', margin: '0 0 2vh 0'}}>최종 결과 🎉</h1>
-                        <div className="result-cards">
-                            {sortedResults.map((res, idx) => (
-                                <div key={res.playerNum} className="result-card">
-                                    <h2 style={{margin:0, fontSize: '4vmin', color: 'var(--secondary)'}}>
-                                        {idx + 1}등 - P{res.playerNum} ({res.score}점)
-                                    </h2>
-                                    <div className="wrong-note">
-                                        <strong>📝 나의 오답 노트</strong><br/>
-                                        {res.wrongAnswers.length === 0 ? 
-                                            <span style={{color: '#2e7d32'}}>전부 맞혔어요! 완벽해요! ✨</span> : 
-                                            <ul style={{paddingLeft: '3vw', margin: '1vh 0', fontSize: '2.5vmin'}}>
-                                                {res.wrongAnswers.map((w, i) => <li key={i}><span className="alphabet-text">{w.q} : {w.wrong} (X) ➔ {w.right} (O)</span></li>)}
-                                            </ul>
-                                        }
+                    <div className="screen result-screen">
+                        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+                            <h1 style={{fontSize: '8vmin', color: 'var(--primary)', margin: '0 0 2vh 0'}}>최종 결과 🎉</h1>
+                            <div className="result-cards">
+                                {sortedResults.map((res, idx) => (
+                                    <div key={res.playerNum} className="result-card">
+                                        <h2 style={{margin:0, fontSize: '4vmin', color: 'var(--secondary)'}}>
+                                            {idx + 1}등 - P{res.playerNum} ({res.score}점)
+                                        </h2>
+                                        <div className="wrong-note">
+                                            <strong>📝 나의 오답 노트</strong><br/>
+                                            {res.wrongAnswers.length === 0 ? 
+                                                <span style={{color: '#2e7d32'}}>전부 맞혔어요! 완벽해요! ✨</span> : 
+                                                <ul style={{paddingLeft: '3vw', margin: '1vh 0', fontSize: '2.5vmin'}}>
+                                                    {res.wrongAnswers.map((w, i) => <li key={i}><span className="alphabet-text">{w.q} : {w.wrong} (X) ➔ {w.right} (O)</span></li>)}
+                                                </ul>
+                                            }
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            <button className="start-btn" onClick={() => setGameState('settings')} style={{marginBottom: '5vh'}}>다시 하기</button>
                         </div>
-                        <button className="start-btn" onClick={() => setGameState('settings')} style={{position:'absolute', bottom: '2vh'}}>다시 하기</button>
                     </div>
                 );
             };
